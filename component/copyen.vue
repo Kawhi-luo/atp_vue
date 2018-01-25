@@ -1,0 +1,276 @@
+<template id="copyen">
+	<div>
+        <h2 class="page-header">Copy Checker (HKEN)</h2>
+        <div class="row">
+            <div class="col-md-4">
+                <p>URL Input(eg:https://www.apple.com/hk/en/iphone)</p>
+                <input type="text" class="form-control" id="url" name="url" placeholder="Please input URL" v-model="url">
+                <button @click="btnQuest" id="btnQuest" class="btn btn-primary">Query</button>
+                <button @click="btnClear" id="btnClear" class="btn btn-primary">Clear</button>
+                <button @click="btnExport" id="btnExport" class="btn btn-primary">Export</button>
+            </div>
+        </div>
+        <div>
+            <table width="100%" class="table table-striped table-bordered" id="diff">
+                <tr>
+                    <td  valign="top" width="25%"></td>
+                        <table>
+                            <thead>
+                            </thead>
+                            <tbody id="resContainer"></tbody>
+                        </table>
+                    </td>
+                    <td  valign="top" width="25%">
+                        <table class="table" >
+                            <thead></thead>
+                            <tbody id="resContainerbranch"></tbody>
+                        </table>
+                    </td>
+                    <td  valign="top" width="25%">
+                        <table class="table" >
+                            <thead></thead>
+                            <tbody id="resContainerusdiffbranch"></tbody>
+                        </table>
+                    </td>
+                    <td  valign="top" width="25%">
+                        <table class="table" >
+                            <thead></thead>
+                            <tbody id="resContainerus"></tbody>
+                        </table>
+                    </td>
+                </tr>
+            </table>
+        </div>
+        <div class="panel-group" id="accordion" >
+            <div class="panel panel-default">
+                <div class="panel-heading">
+                    <h4 class="panel-title">
+                        <a data-toggle="collapse" data-parent="#accordion" href="#collapseOne">Click Me to See Equivalent.</a>
+                    </h4>
+                </div>
+                <div id="collapseOne" class="panel-collapse collapse">
+                    <div class="panel-body">
+                        <table class="table table-striped table-bordered" id="equ">
+                            <tr>
+                                <td valign="top" width="50%">
+                                    <table class="table">
+                                        <thead>Branch Vs Production</thead>
+                                        <tbody id="resContainerequ"></tbody>
+                                    </table>
+                                </td>
+                                <td valign="top" width="50%">
+                                    <table class="table">
+                                        <thead>Branch Vs US</thead>
+                                        <tbody id="resContainerequus"></tbody>
+                                    </table>
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div id="watchgallery">
+            <table class="table table-striped table-bordered">
+                <tbody id="resConwatchStyle"></tbody>
+                <tbody id="resConwatchBand"></tbody>
+                <tbody id="resConwatchFace"></tbody>
+            </table>
+        </div>
+    </div>
+</template>
+<script type="text/javascript">
+    var storedData;
+    export default{
+        data(){
+            return{
+                url:''
+            }
+        },
+        methods:{
+            btnClear(){
+                alert('btnClear');
+                this.url='';
+            },
+            btnQuest(){
+                alert('btnQuest');
+                let url = document.getElementById('url');
+                if(url.value.length > 5){
+                    document.getElementById('resContainer').innerHTML='';
+                    document.getElementById('bg_loading').style.display="block";
+                    let str = ``,str1us=``;
+                    let str1 = ``;
+                    let strbran=``;
+                    let strwatchstyle=``,strwatchband=``,strwatchface=``;
+                    let strhkenus=``,strbranus=``;
+                    var url_trim = url.value.replace(/(^\s*)|(\s*$)/g, "");
+                    axios.post('/api/copyhken',{urls:url_trim})
+                    .then(function(res){
+                        document.getElementById('bg_loading').style.display="none";
+                        console.log(data);
+                        if (data) {
+                            document.getElementById('accordion').style.display="block";
+                            document.getElementById('diff').style.display="block";
+                            document.getElementById('watchgallery').style.display="none";
+                            storedData = data;
+                            str1 += `<tr><td>&diams;&#9786;&diams; Equivalent &diams;&#9786;&diams;</td></tr>`;
+                            str1us += `<tr><td>&diams;&#9786;&diams; Equivalent &diams;&#9786;&diams;</td></tr>`;
+                            for (var i = 0; i < data.length; i++) {
+                                if (data[i][0].indexOf("/interactive-gallery") === -1) {
+
+                                    str += `<tr><td>&diams;&#9785;&diams; Production &diams;&#9785;&diams;</td></tr>`;
+                                    str += `<tr><td><a href="${FormateURL(data[i][0])}" target="_blank">${FormateURL(data[i][0])}</a></td></tr>`;
+                                    if (data[i][2].length == 0) {
+                                        str += `<tr><td class='red'>No added content</td></tr>`;
+                                    } else {
+                                        for (var x = 0; x < data[i][2].length; x++) {
+                                            str += `<tr><td class='red'>${data[i][2][x]}</td></tr>`;
+                                        }
+                                    }
+
+                                    strbran += `<tr><td>&diams;&#9785;&diams; Production VS Branch  &diams;&#9785;&diams;</td></tr>`;
+                                    strbran += `<tr><td><a href="${data[i][0]}" target="_blank">${data[i][0]}</a></td></tr>`;
+                                    if (data[i][3].length == 0) {
+                                        strbran += `<tr><td class='red'>No added content</td></tr>`;
+                                    } else {
+
+                                        for (var x = 0; x < data[i][3].length; x++) {
+                                            strbran += `<tr><td class='red'>${data[i][3][x]}</td></tr>`;
+                                        }
+                                    }
+                                    strbranus += `<tr><td>&diams;&#9785;&diams;  Branch VS US  &diams;&#9785;&diams;</td></tr>`;
+                                    strbranus += `<tr><td><a href="${data[i][0]}" target="_blank">${data[i][0]}</a></td></tr>`;
+                                    if (data[i][5].length == 0) {
+                                        strbranus += `<tr><td class='red'>No added content</td></tr>`;
+                                    } else {
+
+                                        for (var x = 0; x < data[i][5].length; x++) {
+                                            strbranus += `<tr><td class='red'>${data[i][5][x]}</td></tr>`;
+                                        }
+                                    }
+
+
+                                    strhkenus += `<tr><td>&diams;&#9785;&diams; US &diams;&#9785;&diams;</td></tr>`;
+                                    strhkenus += `<tr><td><a href="${FormateUSURL(data[i][0])}" target="_blank">${FormateUSURL(data[i][0])}</a></td></tr>`;
+                                    if (data[i][4].length ==0) {
+
+                                        strhkenus += `<tr><td class='red'>No added content</td></tr>`;
+                                    } else{
+
+                                        for (var x = 0; x < data[i][4].length; x++) {
+                                            strhkenus += `<tr><td class='red'>${data[i][4][x]}</td></tr>`;
+                                        }
+                                    }
+
+
+                                // Below table is Equivalent with WWW table;
+                                    str1 += `<tr><td><a href="${data[i][0]}" target="_blank">${data[i][0]}</a><br>
+                                    <a href="${FormateURL(data[i][0])}" target="_blank">${FormateURL(data[i][0])}</a></td></tr>`;
+                                    for (var x = 0; x < data[i][1].length; x++) {
+                                        str1 += `<tr><td>${data[i][1][x]}</td></tr>`;
+                                    }
+
+                                    str1us += `<tr><td><a href="${data[i][0]}" target="_blank">${data[i][0]}</a><br>
+                                    <a href="${FormateUSURL(data[i][0])}" target="_blank">${FormateUSURL(data[i][0])}</a></td></tr>`;
+                                    for (var x = 0; x < data[i][6].length; x++) {
+                                        str1us+= `<tr><td>${data[i][6][x]}</td></tr>`;
+                                    }
+
+                                    document.getElementById('resContainer').innerHTML=str;
+                                    document.getElementById('resContainerbranch').innerHTML=strbran;
+                                    document.getElementById('resContainerequ').innerHTML=str1;
+                                    document.getElementById('resContainerequus').innerHTML=str1us;
+                                    document.getElementById('resContainerus').innerHTML=strhkenus;
+                                    document.getElementById('resContainerusdiffbranch').innerHTML=strbranus;
+
+                                } else {
+
+                                    document.getElementById('accordion').style.display="none";
+                                    document.getElementById('diff').style.display="none";
+                                    document.getElementById('watchgallery').style.display="block";
+
+                                    strwatchstyle += `<tr><td colspan="3" bgcolor="#175b96" class="f1"><a href="${data[i][0]}" target="_blank">${data[i][0]}</a></td></tr>`;
+                                    strwatchstyle += `<tr><td style="font-weight: bold" >Geo</td><td style="font-weight: bold" >WWW</td><td style="font-weight: bold" >US</td></tr>`;
+                                    strwatchstyle += `<tr><td colspan="3" bgcolor="#1e90ff" class="f1">表款</td></tr>`;
+                                    for (var y = 0; y < data[i][3][0].length; y++) {
+                                        strwatchstyle += `<tr><td ${data[i][2][0][y]==data[i][1][0][y] ? "" : "class='red'"}>${data[i][2][0][y]}</td><td>${data[i][1][0][y]}</td><td>${data[i][3][0][y]}</td></tr>`;
+                                    }
+                                    strwatchband += `<tr><td colspan="3" bgcolor="#1e90ff" class="f1" >表带</td></tr>`;
+                                    for (var z = 0; z < data[i][3][1].length; z++) {
+                                        strwatchband += `<tr><td ${data[i][2][1][z]==data[i][1][0][z] ? "" : "class='red'"}>${data[i][2][1][z]}</td><td>${data[i][1][0][z]}</td><td>${data[i][3][0][z]}</td></tr>`;
+                                    }
+                                    strwatchface += `<tr><td colspan="3" bgcolor="#1e90ff" class="f1" >表盘</td></tr>`;
+                                    for (var w = 0; w < data[i][3][2].length; w++) {
+                                        strwatchface += `<tr><td ${data[i][2][2][w]==data[i][1][2][w] ? "" : "class='red'"}>${data[i][2][2][w]}</td><td>${data[i][1][2][w]}</td><td>${data[i][3][2][w]}</td></tr>`;
+                                     }
+
+                                    document.getElementById('resConwatchStyle').innerHTML=strwatchstyle;
+                                    document.getElementById('resConwatchBand').innerHTML=strwatchband;
+                                    document.getElementById('resConwatchFace').innerHTML=strwatchface;
+
+                                    function FormateURL(url){
+                                        var myURL = parseURL(url);
+                                        return "https://www.apple.com"+myURL.path;
+                                    };
+                                    function FormateUSURL(url){
+                                        var myURL = parseURL(url);
+                                        var uspath=myURL.path.substring(7,);
+                                        console.log(uspath);
+                                        return myURL.protocol + "://" + myURL.host + "/" +uspath;
+                                    };
+                                    function parseURL(url) {
+                                        var a =  document.createElement('a');
+                                        a.href = url;
+                                        return {
+                                            source: url,
+                                            protocol: a.protocol.replace(':',''),
+                                            host: a.hostname,
+                                            port: a.port,
+                                            query: a.search,
+                                            file: (a.pathname.match(/\/([^\/?#]+)$/i) || [,''])[1],
+                                            hash: a.hash.replace('#',''),
+                                            path: a.pathname.replace(/^([^\/])/,'/$1'),
+                                            relative: (a.href.match(/tps?:\/\/[^\/]+(.+)/) || [,''])[1],
+                                            segments: a.pathname.replace(/^\//,'').split('/')
+                                        };
+                                    }
+                                }
+                            }
+                        }
+                })
+                .catch(function(err){
+                    alert('qFalse');
+                })
+            } else {
+                console.log("null");               }
+            },
+            btnExport(){
+                alert('btnExport');
+                let url = document.getElementById('url');
+                if(url.value.length > 0){
+                    axios.post(`/api/export`,{
+                        data:JSON.stringify(storedData),
+                        title:'Copy Report',
+                        file:'copy'
+                    },(data)=>{
+                        //$.fileDownload(`/api/files/${data}`);
+                    })
+                }
+            }
+        }
+    }
+</script>
+<style scoped>
+    .f1{
+        color: white;
+    }
+    .f1>a{
+        color: white;
+    }
+    #diff{
+        word-wrap: break-word; word-break: break-all
+    }
+    #accordion,#watchgallery,#diff{
+        display: none;
+    }
+</style>
