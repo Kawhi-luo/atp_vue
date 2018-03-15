@@ -98,8 +98,7 @@
 </template>
 <script type="text/javascript">
 </script>
-<style scoped>
-
+<style>
         #mycom {
             width: 750px;
             margin: 40px auto;
@@ -113,10 +112,6 @@
             border-spacing: 0;
             width: 100%;
         }
-
-
-
-        /*----------------------*/
 
         .zebra td, .zebra th {
             padding: 10px;
@@ -133,7 +128,7 @@
         .zebra th {
             text-align: left;
             text-shadow: 0 1px 0 rgba(255,255,255,.5);
-            border-bottom: 1px solid #ccc;
+/*            border-bottom: 1px solid #ccc;*/
             background-color: #eee;
             background-image: -webkit-gradient(linear, left top, left bottom, from(#f5f5f5), to(#eee));
             background-image: -webkit-linear-gradient(top, #f5f5f5, #eee);

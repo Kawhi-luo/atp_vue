@@ -25,12 +25,23 @@
     </div>
 </template>
 <script type="text/javascript">
-    var storedData;
-    
+    var qs = require('qs');
+    import  bus from '../assets/eventBus';
+    import axios from 'axios';
+    function isContainstar(str1) {
+        let flag = false;
+        if (str1) {
+            if (str1.length === 0) return flag;
+           if(str1.indexOf('*') >= 0){
+               flag=true;
+           }
+        }
+        return flag;
+    }
     export default{
         data(){
             return{
-                urls:''
+                urls:'',
             }
         },
         methods:{
@@ -44,28 +55,32 @@
                 };
             },
             btnClear(){
-                alert('btnClear');
                 this.urls='';
             },
             btnQuest(){
-                alert('btnQuest');
-                let urls = document.getElementById('urls');
-                if(urls.value.length > 5){
-                    document.getElementById('resContainer').innerHtml='';
-                    document.getElementById('bg_loading').style.display="block";
-                    var urls_trim = urls.value.replace(/(^\s*)|(\s*$)/g, "");
-                    axios.post('/api/footnote',{urls:urls_trim})
+                let vm = this;
+                var storedData;
+                if(vm.urls.length > 5){
+                    document.getElementById('resContainer').innerHTML=``;
+                    bus.$emit("show",true);
+                    let urls_trim = urls.value.replace(/(^\s*)|(\s*$)/g, "");
+                    
+                    axios.post('/api/footnote',qs.stringify({ 'urls': urls_trim }))
                     .then(function(data){
-                        document.getElementById('bg_loading').style.display="none";
-                        //console.log(data);
+                        console.log(data);
+                        bus.$emit("show",false);
+
                         if (data) {
                             let str1 = ``;
-                            storedData = data;
+                            let str = ``;
+                            storedData = data.data;
+                            console.log(storedData);
+
                             str += `<tr><th>Sort</th><th width="48%">FootNote</th><th width="48%">☞Copy</th></tr>`;
-                            storedData.foreach((value,n)=>{
-                                let footnotes = storedData[n].data.data;
-                                console.log(storedData[n]);
-                                str += `<tr><td colspan="3"><a href="${storedData[n].url}" target="_blank">${storedData[n].url}</td>`;
+                            for(let i = 0;i<storedData.length;i++){
+                                let footnotes = storedData[i]['data']['data'];
+                                console.log(footnotes);
+                                str += `<tr><td colspan="3"><a href="${storedData[i].url}" target="_blank">${storedData[i].url}</td>`;
                                 let arrlen =footnotes.length;
                                 str+=``;
                                 for(let i = 0; i < arrlen; i++){
@@ -74,16 +89,16 @@
                                 }
                                 str+=`<tr><td>Un-sorted</td><td colspan="2">`;
 
-                                let irrlen=storedData[n].data.irrelevance.length;
-                                let irr=storedData[n].data.irrelevance;
+                                let irrlen=storedData[i].data.irrelevance.length;
+                                let irr=storedData[i].data.irrelevance;
                                 for (let j = 0; j < irrlen; j++) {
                                     str+=`&#9829 ${irr[j]}<br>`;
                                 }
                                 str+=`</td></tr>`;
-                                document.getElementById('resContainer').innerHtml=str;
-                            })
+                                document.getElementById('resContainer').innerHTML=str;
+                            }
                         }else {
-                            //console.log("null");
+                            console.log("null");
                         }
                     })
                     .catch(function(err){
@@ -92,9 +107,7 @@
                 } 
             },
             btnExport(){
-                alert('btnExport');
-                let urls = document.getElementById('urls');
-                if(urls.value.length > 0){
+                if(this.urls.length > 0){
                     console.log(storedData);
                     var arr = [];
                     storedData.foreach((value,n)=>{
@@ -104,12 +117,12 @@
                         irrelevance:value.irrelevance
                         });
                     })
-                    axios.post(`/api/export`,{
+                    vm.$http.post(`/api/export`,{
                         data:JSON.stringify(storedData),
                         title:'FootNotes Report',
                         file:'footnotes'
                     },(data)=>{
-                        //$.fileDownload(`/api/files/${data}`);
+                        $.fileDownload(`/api/files/${data}`);
                     })
                 }
             }

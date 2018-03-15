@@ -38,13 +38,14 @@
     </div>
 </template>
 <script type="text/javascript">
-    var storedData;
+    var qs = require('qs');
     import  bus from '../assets/eventBus';
+    import axios from 'axios';
     export default{
         name:'app',
         data(){
             return{
-                urls:""
+                urls:'',
             }
         },
         methods:{
@@ -61,10 +62,11 @@
                 this.urls='';
             },
             btnQuest(){
-                let urls = document.getElementById('urls');
-                if(urls.value.length > 5){
-                    document.getElementById('resContainer').innerHTML='';
-                    document.getElementById('bg_loading').style.display="block";
+                let vm= this;
+                var storedData;
+                if(vm.urls.length > 5){
+                    document.getElementById('resContainer').innerHTML=``;
+                    bus.$emit("show",true);
                     let queryObj = {};
                     let typeName = document.getElementById('typeId').options[document.getElementById('typeId').selectedIndex].text;
                     let serverName = document.getElementById('server').options[document.getElementById('server').selectedIndex].text;
@@ -77,40 +79,66 @@
                     }
 
                     let _option = JSON.stringify(queryObj);
-                    const urls = document.getElementById('urls').value;
+                    let urls = vm.urls;
+                    console.log(urls);
+                    console.log(_option);
+                    //vm.$http.post('api/font/url',{urls:urls,option:_option})
+                    //axios.post('api/font/url',qs.stringify({ 'urls': urls, 'option' : _option }))
+                    //.then(function(Json_data){
+                    // $.post('api/font/url', {urls: urls,option:_option}, function (Json_data) {
+                    //     bus.$emit("show",false);
+                    //     if(Json_data.data.result === true){
+                    //         let str1 = ``;
+                    //         let arrdata = Json_data.data.data;
+                    //         storedData = Json_data.data.data;
+                    //         console.log(arrdata);
 
-                    axios.post('api/font/url',{urls:urls,option:_option})
-                    .then(function(Json_data){
-                        document.getElementById('bg_loading').style.display="none";
+                    //         for(let m in arrdata){
+                    //             str1 += `<tr><td>URL:</td><td><a href="${arrdata[m].url}" target="_blank">${arrdata[m].url}</a></td></tr>`;
+                    //             for(let n in arrdata[m].data){
+                    //                 str1 += `<tr><td>${arrdata[m].data[n]}</td><td>`;
+                    //                 if(arrdata[m].data.length>0){
+                    //                     for(let x in arrdata[m].data){
+                    //                         str1 += `${arrdata[m].data[x].word}[${valueinter[x].code}]&nbsp `;
+                    //                     }
+                    //                     str1+=`</td></tr>`;
+                    //                 }else{
+                    //                     str1 +=`No Font Missing`;
+                    //                 }
+                    //             }
+                    //         }
+                    //         document.getElementById('resContainer').innerHTML=str1;
+                    //     }
+                    // })
+                    $.post('api/font/url', {urls: urls,option:_option}, function (Json_data) {
+                        bus.$emit("show",false);
+                        console.log(Json_data);
                         if(Json_data.result === true){
                             let str1 = ``;
                             let arrdata = Json_data.data;
                             storedData = Json_data.data;
-                            console.log(storedData);
-                            arrdata.foreach((value,m)=>{
-                                str1 += `<tr><td>URL:</td><td><a href="${value.url}" target="_blank">${value.url}</a></td></tr>`;
-                                value.data.foreach((valueinter,n) => {
-                                    str1 += `<tr><td>${n}</td><td>`;
-                                    var x;
-                                    console.log(valueinter.length);
-                                    if(valueinter.length>0){
-                                    for (x in valueinter){
+                            console.log(arrdata);
 
-                                        str1 += `${valueinter[x].word}[${valueinter[x].code}], `;
-                                    };
-                                    str1+=`</td></tr>`;
+                            for(let m in arrdata){
+                                str1 += `<tr><td>URL:</td><td><a href="${arrdata[m].url}" target="_blank">${arrdata[m].url}</a></td></tr>`;
+                                for(let n in arrdata[m].data){
+                                    str1 += `<tr><td>${arrdata[m].data[n]}</td><td>`;
+                                    if(arrdata[m].data[n].length>0){
+                                        for(let x in arrdata[m].data[n]){
+                                            str1 += `${arrdata[m].data[n][x].word}[${arrdata[m].data[n][x].code}]&nbsp `;
+                                        }
+                                        str1+=`</td></tr>`;
                                     }else{
                                         str1 +=`No Font Missing`;
                                     }
-                                })
-                                document.getElementById('resContainer').innerHTML=str1;
-                            })
+                                }
+                            }
+                            document.getElementById('resContainer').innerHTML=str1;
                         }
                     })
-                    .catch(function(err){
-                        alert('aFalse');
-                    })
-
+                    // .catch(function(err){
+                    //     alert('aFalse');
+                    // })
                 } else {
                     console.log("The URL length is too short!");
                 }
@@ -118,12 +146,12 @@
             btnExport(){
                 if(this.urls.length > 0){
                     console.log(storedData);
-                    axios.post(`/api/export`,{
+                    $.post(`/api/export`,{
                         data:JSON.stringify(storedData),
                         title:'Font Report',
                         file:'font'
                     },(data)=>{
-                        //$.fileDownload(`/api/files/${data}`);
+                        $.fileDownload(`/api/files/${data}`);
                     })
                 }
             }

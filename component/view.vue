@@ -31,8 +31,9 @@
     </div>
 </template>
 <script type="text/javascript">
-    var storedData;
-     
+    var qs = require('qs');
+    import  bus from '../assets/eventBus';
+    import axios from 'axios';
     export default{
         data(){
             return{
@@ -56,24 +57,26 @@
                 };
             },
             btnClear(){
-                alert('btnClear');
                 this.urls='';
             },
             btnQuest(){
-                alert('btnQuest');
-                let urls = document.getElementById('urls');
+                var storedData;
+                let vm = this;
                 if(urls.value.length > 5){
-                    document.getElementById('resContainer').innerHTML='';
-                    document.getElementById('bg_loading').style.display="block";
-                    var urls_trim = urls.value.replace(/(^\s*)|(\s*$)/g, "");
-                    axios.post('/api/viewport',{urls:urls_trim})
-                    .then(function(res){
-                        document.getElementById('bg_loading').style.display="none";
+                    document.getElementById('resContainer').innerHTML=``;
+                    document.getElementById('resContainererr').innerHTML=``;
+                    bus.$emit("show",true);
+                    var urls_trim = vm.urls.replace(/(^\s*)|(\s*$)/g, "");
+                    //vm.$http.post('/api/viewport',{urls:urls_trim})
+                    console.log(urls_trim);
+                    axios.post('/api/viewport',qs.stringify({ 'urls': urls_trim }))
+                    .then(function(data){
+                        bus.$emit("show",false);
                         console.log(data);
-                        if (data) {
+                        if (data.data) {
                             let str = ``;
                             let strerr = ``;
-                            storedData = data;
+                            storedData = data.data;
 
                             str += `<tr>
                             <th>URL</th>
@@ -85,23 +88,22 @@
                             <th>ViewPort</th>
                             <th>Result</th>
                             </tr>`;
-                            data.forEach((item, index) => {
+                            data.data.forEach((item, index) => {
                                 if (item) {
                                     if (item.flag === false) {
-
                                         strerr += `<tr>
                                         <td><a href="${item.url}" target="_blank">${item.url}</a></td>
                                         <td>${item.viewport}</td>
                                         <td ${(item.flag == false ) ? " class='red'" : ""}>${item.flag}</td>
                                         </tr>`;
-                                        document.getElementById('resContainererr').innerHTML='strerr';
+                                        document.getElementById('resContainererr').innerHTML=strerr;
                                     } else {
                                         str += `<tr>
                                         <td><a href="${item.url}" target="_blank">${item.url}</a></td>
                                         <td>${item.viewport}</td>
                                         <td ${(item.flag == false ) ? " class='red'" : ""}>${item.flag}</td>
                                         </tr>`;
-                                        document.getElementById('resContainer').innerHTML='str';
+                                        document.getElementById('resContainer').innerHTML=str;
                                     }
                                 }
                             });
@@ -117,10 +119,8 @@
                 }
             },
             btnExport(){
-                alert('btnExport');
-                let urls = document.getElementById('urls');
-                if(urls.value.length > 0){
-                    axios.post(`/api/export`,{
+                if(this.urls.length > 0){
+                    vm.$http.post(`/api/export`,{
                         data:JSON.stringify(storedData),
                         title:'Viewport Report',
                         file:'viewport'

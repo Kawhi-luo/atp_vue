@@ -1,12 +1,20 @@
+<style type="text/css">
+	.loginBar{
+		position: absolute;
+		top:0;
+		right: 0;
+	}
+	#btnUserName{
+		border:none;
+	}
+</style>
 <template>
-	<div>
-		<div class="loginBar">
+	<div class="loginBar">
         <button type="button" class="btn btn-default" id="btnUserName" @click="admin">
           <span class="glyphicon glyphicon-user" aria-hidden="true"></span>
           <span id="userName" v-model="userName">{{userName}}</span>
         </button>
-      </div>
-	</div>
+    </div>
 </template>
 <script type="text/javascript">
 	import  bus from '../assets/eventBus';

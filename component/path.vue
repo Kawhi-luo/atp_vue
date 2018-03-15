@@ -21,13 +21,15 @@
         <div>
             <table class="table table-striped table-bordered">
                 <thead></thead>
-                <tbody id="resContainer"></tbody>
+                <tbody id="resContainer" v-model="resContainer"></tbody>
             </table>
         </div>
     </div>
 </template>
 <script type="text/javascript">
-    var storedData;
+    var qs = require('qs');
+    import  bus from '../assets/eventBus';
+    import axios from 'axios';
     function html_encode(str1) {
         let s = "";
         if (str1) {
@@ -48,7 +50,8 @@
     export default{
         data(){
             return{
-                urls:''
+                urls:'',
+                resContainer:''
             }
         },
         methods:{
@@ -58,35 +61,38 @@
                 let reader = new FileReader();
                 reader.readAsText(fileInput);
                 reader.onload = function(){
-                  vm.urls=this.result;
+                    vm.urls=this.result;
                 };
             },
             btnClear(){
-                alert('btnClear');
                 this.urls='';
             },
             btnQuest(){
-                alert('btnQuest');
-                let urls = document.getElementById('urls');
-                if(urls.value.length > 5){
-                    document.getElementById('resContainer').innerHTML='';
-                    document.getElementById('bg_loading').style.display="block";
-                    var urls_trim = urls.value.replace(/(^\s*)|(\s*$)/g, "");
-                    axios.post('/api/vpath/url',{urls:urls_trim})
-                    .then(function(res){
-                        document.getElementById('bg_loading').style.display="none";
-                        if (data) {
+                var storedData;
+                let vm = this;
+                if(vm.urls.length > 5){
+                    document.getElementById('resContainer').innerHTML=``;
+                    bus.$emit("show",true);
+                    var urls_trim = vm.urls.replace(/(^\s*)|(\s*$)/g, "");
+                    //vm.$http.post('/api/vpath/url',{urls:urls_trim})
+                    axios.post('/api/vpath/url',qs.stringify({ 'urls': urls_trim }))
+                    .then(function(data){
+                        bus.$emit("show",false);
+                        if (data.data) {
                             let str1 = ``;
-                            storedData = data.data;
+                            let str = ``;
+                            storedData = data.data.data;
                             console.log(storedData);
                             str += `<tr><th>Geo-Vpath</th><th>US-Vpath</th></tr>`;
-                            data.forEach((value, n) => {
+                            for(var n in storedData){
                                 str += `<tr><td colspan="2"><a href="${n}" target="_blank">${n}</td></tr>`;
-                                for(var i=0;i<value.length;i++){
-                                    str+=`<tr><td ${value[i].flag==true ? "" : "class='red'"}>${html_encode(value[i].origin)}</td><td ${value[i].flag==true ? "" : "class='red'"}>${html_encode(value[i].us)}</td></tr>`;
-                            }
+                                for(var i in storedData[n]){
+                                    console.log(html_encode(storedData[n][i].origin));
+                                    str+=`<tr><td ${storedData[n][i].flag==true ? "" : "class='red'"}>${html_encode(storedData[n][i].origin)}</td><td ${storedData[n][i].flag==true ? "" : "class='red'"}>${html_encode(storedData[n][i].us)}</td></tr>`;
+                                }
                                 document.getElementById('resContainer').innerHTML=str;
-                            })
+
+                            }
                         }    
                     })
                     .catch(function(err){
@@ -97,10 +103,9 @@
                 }
             },
             btnExport(){
-                alert('btnExport');
-                let urls = document.getElementById('urls');
-                if(urls.value.length > 0){
-                    axios.post(`/api/export`,{
+                if(this.urls.length > 0){
+                    console.log(storedData);
+                    vm.$http.post(`/api/export`,{
                         data:JSON.stringify(storedData),
                         title:'vpath Report',
                         file:'vpath'
