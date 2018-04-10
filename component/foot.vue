@@ -1,6 +1,6 @@
 <template id="foot">
-	<div>
-		<h2 class="page-header">FootNotes Checker</h2>
+    <div>
+        <h2 class="page-header">FootNotes Checker</h2>
         <div class="row">
             <div class="col-md-3">
                 <p>URL Import(.txt only)</p>
@@ -18,30 +18,43 @@
             </div>
         </div>
         <div>
-            <table class="table table-striped table-bordered">
-                <thead></thead><tbody id="resContainer"></tbody>
+            <table border="1" cellspacing="0" v-if="table">
+              <tr>
+                <td>Sort</td>
+                <td>FootNote</td>
+                <td>Copy</td>
+              </tr>
+              <tr>
+                <td v-model="http" colspan="3">{{http}}</td>
+              </tr>
+              <tr v-for="item in tableData">
+                <td>{{item.mark}}</td>
+                <td>{{item.footnote}}</td>
+                <td>{{item.copy}}</td>
+              </tr>
+              <tr v-model="unsorted">
+                <td v-bind:rowspan="unsortedLength">Un-sorted</td>
+              </tr>
+              <tr v-for="item in unsorted">
+                <td colspan="2" >{{item}}</td>
+              </tr>
             </table>
         </div>
     </div>
 </template>
 <script type="text/javascript">
+    var storedData;
     var qs = require('qs');
     import  bus from '../assets/eventBus';
-    import axios from 'axios';
-    function isContainstar(str1) {
-        let flag = false;
-        if (str1) {
-            if (str1.length === 0) return flag;
-           if(str1.indexOf('*') >= 0){
-               flag=true;
-           }
-        }
-        return flag;
-    }
     export default{
         data(){
             return{
+                table:false,
+                tableData:[],
                 urls:'',
+                http:'',
+                unsorted:[],
+                unsortedLength:''
             }
         },
         methods:{
@@ -58,53 +71,26 @@
                 this.urls='';
             },
             btnQuest(){
-                let vm = this;
-                var storedData;
-                if(vm.urls.length > 5){
-                    document.getElementById('resContainer').innerHTML=``;
-                    bus.$emit("show",true);
-                    let urls_trim = urls.value.replace(/(^\s*)|(\s*$)/g, "");
-                    
+                if(this.urls.length > 5){
+                    var vm = this;
+                    // bus.$emit("show",true);
+                    let urls_trim = this.urls.replace(/(^\s*)|(\s*$)/g, "");
+                    console.log(urls_trim);
                     axios.post('/api/footnote',qs.stringify({ 'urls': urls_trim }))
                     .then(function(data){
                         console.log(data);
-                        bus.$emit("show",false);
-
-                        if (data) {
-                            let str1 = ``;
-                            let str = ``;
-                            storedData = data.data;
-                            console.log(storedData);
-
-                            str += `<tr><th>Sort</th><th width="48%">FootNote</th><th width="48%">☞Copy</th></tr>`;
-                            for(let i = 0;i<storedData.length;i++){
-                                let footnotes = storedData[i]['data']['data'];
-                                console.log(footnotes);
-                                str += `<tr><td colspan="3"><a href="${storedData[i].url}" target="_blank">${storedData[i].url}</td>`;
-                                let arrlen =footnotes.length;
-                                str+=``;
-                                for(let i = 0; i < arrlen; i++){
-                                    str +=`<tr><td></td><td ${footnotes[i].copy=="" ?"class='red'":""} >${footnotes[i].mark} ${isContainstar(footnotes[i].mark) ?" ":"."} ${footnotes[i].footnote}</td>
-                                    <td ${footnotes[i].footnote=="" ?"class='red'":""}>${footnotes[i].copy}</td></tr>`;
-                                }
-                                str+=`<tr><td>Un-sorted</td><td colspan="2">`;
-
-                                let irrlen=storedData[i].data.irrelevance.length;
-                                let irr=storedData[i].data.irrelevance;
-                                for (let j = 0; j < irrlen; j++) {
-                                    str+=`&#9829 ${irr[j]}<br>`;
-                                }
-                                str+=`</td></tr>`;
-                                document.getElementById('resContainer').innerHTML=str;
-                            }
-                        }else {
-                            console.log("null");
-                        }
+                        vm.table = true;
+                        vm.tableData = data.data[0].data.data;
+                        vm.http = data.data[0].url;
+                        vm.unsorted = data.data[0].data.irrelevance;
+                        vm.unsortedLength = data.data[0].data.irrelevance.length+1;
                     })
                     .catch(function(err){
-                        alert('qFalse');
+                        console.log('axios false');
                     })
-                } 
+                }else{
+                  alert('this length is too short')
+                }
             },
             btnExport(){
                 if(this.urls.length > 0){
@@ -122,7 +108,7 @@
                         title:'FootNotes Report',
                         file:'footnotes'
                     },(data)=>{
-                        $.fileDownload(`/api/files/${data}`);
+                        //$.fileDownload(`/api/files/${data}`);
                     })
                 }
             }
