@@ -1,3 +1,8 @@
+<style type="text/css">
+  .red{
+    color: red;
+  }
+</style>
 <template id="view">
 	<div>
 		<h2 class="page-header">Viewport Checker</h2>
@@ -6,26 +11,50 @@
                 <p>URL Import(.txt only)</p>
                 <input class="form-control" type="file" id="fileInput">
                 <span class="input-group-btn">
-                    <input @click="btnImport" type="button" class="btn btn-primary" value="Import" id="btnImport"/>
+                    <input @click="btnImport" type="button" class="btn btn-primary" value="Import">
                 </span>
                 <p>URL Input (eg:https://www.apple.com/cn/iphone)</p>
-                <textarea rows="5" id="urls" class="form-control" v-model="urls"></textarea>
+                <textarea rows="5" class="form-control" v-model="urls"></textarea>
                 <br>
-                <button @click="btnQuest" id="btnQuest" class="btn btn-primary">Query</button>
-                <button @click="btnClear" id="btnClear" class="btn btn-primary">Clear</button>
+                <button @click="btnQuest" class="btn btn-primary">Query</button>
+                <button @click="btnClear" class="btn btn-primary">Clear</button>
             </div>
             <div class="col-md-7 showValue">
                 Show:
-                <input id="radioerr" name="criteria" type="radio" value="failure" @click="failure">Failures
-                <input id="radioall" name="criteria" type="radio" value="all"  @click="all">all
+                <input name="criteria" type="radio" value="failure" @click="failure">Failures
+                <input name="criteria" type="radio" value="all" @click="all">all
                 <br>
-                <button @click="btnExport" id="btnExport" class="btn btn-primary">Export</button>
-                <table class="table table-striped table-bordered">
-                    <tbody id="resContainererr"></tbody>
-                </table>
-                <table class="table table-striped table-bordered" id="corTable">
-                    <tbody id="resContainer"></tbody>
-                </table>
+                <button @click="btnExport" class="btn btn-primary">Export</button>
+                <div v-if="table">
+                    <table class="table table-striped table-bordered" v-for="item in tableData_false">
+                        <tbody>
+                            <tr>
+                                <th>URL</th>
+                                <th>ViewPort</th>
+                                <th>Result</th>
+                            </tr>
+                            <tr>
+                                <td><a :href="item.url">{{item.url}}</a></td>
+                                <td>{{item.viewport}}</td>
+                                <td class="red">{{item.flag}}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <table class="table table-striped table-bordered" v-for="item in tableData_true" v-show="table_true">
+                        <tbody>
+                            <tr>
+                                <th>URL</th>
+                                <th>ViewPort</th>
+                                <th>Result</th>
+                            </tr>
+                            <tr>
+                                <td><a :href="item.url">{{item.url}}</a></td>
+                                <td>{{item.viewport}}</td>
+                                <td>{{item.flag}}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
     </div>
@@ -33,19 +62,22 @@
 <script type="text/javascript">
     var qs = require('qs');
     import  bus from '../assets/eventBus';
-    import axios from 'axios';
     export default{
         data(){
             return{
-                urls:''
+              table:true,
+              table_true:true,
+              urls:'',
+              tableData_true:[],
+              tableData_false:[]
             }
         },
         methods:{
             failure(){
-                document.getElementById('corTable').style.display='none';
+                this.table_true = false
             },
             all(){
-                document.getElementById('corTable').style.display='block';
+                this.table_true = true
             },
             btnImport(){
                 let vm = this;
@@ -53,74 +85,35 @@
                 let reader = new FileReader();
                 reader.readAsText(fileInput);
                 reader.onload = function(){
-                  vm.urls=this.result;
+                    vm.urls=this.result;
                 };
             },
             btnClear(){
-                this.urls='';
+                this.urls=""
             },
             btnQuest(){
-                var storedData;
-                let vm = this;
-                if(urls.value.length > 5){
-                    document.getElementById('resContainer').innerHTML=``;
-                    document.getElementById('resContainererr').innerHTML=``;
-                    bus.$emit("show",true);
-                    var urls_trim = vm.urls.replace(/(^\s*)|(\s*$)/g, "");
-                    //vm.$http.post('/api/viewport',{urls:urls_trim})
-                    console.log(urls_trim);
-                    axios.post('/api/viewport',qs.stringify({ 'urls': urls_trim }))
-                    .then(function(data){
-                        bus.$emit("show",false);
-                        console.log(data);
-                        if (data.data) {
-                            let str = ``;
-                            let strerr = ``;
-                            storedData = data.data;
-
-                            str += `<tr>
-                            <th>URL</th>
-                            <th>ViewPort</th>
-                            <th>Result</th>
-                            </tr>`;
-                            strerr += `<tr>
-                            <th>URL</th>
-                            <th>ViewPort</th>
-                            <th>Result</th>
-                            </tr>`;
-                            data.data.forEach((item, index) => {
-                                if (item) {
-                                    if (item.flag === false) {
-                                        strerr += `<tr>
-                                        <td><a href="${item.url}" target="_blank">${item.url}</a></td>
-                                        <td>${item.viewport}</td>
-                                        <td ${(item.flag == false ) ? " class='red'" : ""}>${item.flag}</td>
-                                        </tr>`;
-                                        document.getElementById('resContainererr').innerHTML=strerr;
-                                    } else {
-                                        str += `<tr>
-                                        <td><a href="${item.url}" target="_blank">${item.url}</a></td>
-                                        <td>${item.viewport}</td>
-                                        <td ${(item.flag == false ) ? " class='red'" : ""}>${item.flag}</td>
-                                        </tr>`;
-                                        document.getElementById('resContainer').innerHTML=str;
-                                    }
-                                }
-                            });
-                        }else {
-                            console.log("null");
+                var vm = this;
+                var urls_trim = vm.urls.replace(/(^\s*)|(\s*$)/g, "");
+                axios.post('/api/viewport',qs.stringify({ 'urls': urls_trim }))
+                .then(function(data){
+                    console.log(data.data);
+                    let store = data.data;
+                    for(let i in store){
+                        if(store[i].flag==false){
+                            vm.tableData_false.push(store[i]);
+                        }else{
+                            vm.tableData_true.push(store[i]);
                         }
-                    })
-                    .catch(function(err){
-                        alert('qFalse');
-                    })
-                } else {
-                    console.log("null");
-                }
+                    }
+                })
+                .catch(function(err){
+                })
             },
             btnExport(){
-                if(this.urls.length > 0){
-                    vm.$http.post(`/api/export`,{
+                alert('btnExport');
+                let urls = document.getElementById('urls');
+                if(urls.value.length > 0){
+                    axios.post(`/api/export`,{
                         data:JSON.stringify(storedData),
                         title:'Viewport Report',
                         file:'viewport'
