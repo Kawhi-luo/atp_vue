@@ -27,63 +27,65 @@
             </div>
         </div>
         <div>
-            <table border="1" cellspacing="0" v-if="table" v-for="(item,idx) in tableData">
-              <tr>
-                <td>URL:</td>
-                <td colspan="2" v-model="http">{{http}}</td>
-              </tr>
-              <tr>
-                <td></td>
-                <td>Geo</td>
-                <td>US</td>
-              </tr>
-              <tr>
-                <td>Title:</td>
-                <td :class="{'red':ctitle(idx)}">{{item.title}}</td>
-                <td>{{item.titleUS}}</td>
-              </tr>
-              <tr>
-                <td>Description:</td>
-                <td :class="{'red':(item.desc.length>150 || item.desc.length<100)}">{{item.desc}}</td>
-                <td>{{item.descUS}}</td>
-              </tr>
-              <tr>
-                <td>OG Title:</td>
-                <td>{{item.ogTitle}}</td>
-                <td>{{item.ogTitleUS}}</td>
-              </tr>
-              <tr>
-                <td>OG URL:</td>
-                <td ><a :href="item.ogUrl" :class="{'red':(samewithUS(idx) || islocalized(idx) || item.ogUrl.indexOf('https')==-1)}">{{item.ogUrl}}</a></td>
-                <td><a :href='item.ogUrlUS'>{{item.ogUrlUS}}</a></td>
-              </tr>
-              <tr>
-                <td>OG Description:</td>
-                <td>{{item.ogDesc}}</td>
-                <td>{{item.ogDescUS}}</td>
-              </tr>
-              <tr>
-                <td>OG Image:</td>
-                <td><img class="ext-thumb" :src="item.oglab"><br><a :href="item.oglab">{{item.oglab}}</a></td>
-                <td><img class="ext-thumb" :src="item.ogImageUS"><br><a :href="item.ogImageUS">{{item.ogImageUS}}</a></td>
-              </tr>
-              <tr>
-                <td>OG Image Current Server:</td>
-                <td><img class="ext-thumb" :src="item.ogImage.url">
-                  <br>width:{{item.ogImage.size.width}}
-                  <br>height:{{item.ogImage.size.height}}
-                  <br><a :href="item.ogImage.url" :class="{'red':item.ogImage.url.indexOf('https')==-1}">{{item.ogImage.url}}</a></td>
-                <td><img class="ext-thumb" :src="item.ogImageUScur">
-                  <br><a :href="item.ogImageUScur">{{item.ogImageUScur}}</a></td>
-              </tr>
-              <tr>
-                <td>WeChat Image:</td>
-                <td><img class="ext-thumb" :src="item.wechat.url">
-                  <br>width:{{item.wechat.size.width}}
-                  <br>height:{{item.wechat.size.height}}
-                  <a :href="item.wechat.url">{{item.wechat.url}}</a></td>
-                <td>N/A</td>
-              </tr>
+            <table class="table table-striped table-bordered" v-if="table" v-for="(item,idx) in tableData">
+              <tbody>
+                <tr>
+                  <td>URL:</td>
+                  <td colspan="2"><a :href="item.url">{{item.url}}</a></td>
+                </tr>
+                <tr>
+                  <td></td>
+                  <td>Geo</td>
+                  <td>US</td>
+                </tr>
+                <tr>
+                  <td>Title:</td>
+                  <td :class="{'red':ctitle(idx)}">{{item.title}}</td>
+                  <td>{{item.titleUS}}</td>
+                </tr>
+                <tr>
+                  <td>Description:</td>
+                  <td :class="{'red':(item.desc.length>150 || item.desc.length<100)}">{{item.desc}}</td>
+                  <td>{{item.descUS}}</td>
+                </tr>
+                <tr>
+                  <td>OG Title:</td>
+                  <td>{{item.ogTitle}}</td>
+                  <td>{{item.ogTitleUS}}</td>
+                </tr>
+                <tr>
+                  <td>OG URL:</td>
+                  <td ><a :href="item.ogUrl" :class="{'red':(samewithUS(idx) || islocalized(idx) || item.ogUrl.indexOf('https')==-1)}">{{item.ogUrl}}</a></td>
+                  <td><a :href='item.ogUrlUS'>{{item.ogUrlUS}}</a></td>
+                </tr>
+                <tr>
+                  <td>OG Description:</td>
+                  <td>{{item.ogDesc}}</td>
+                  <td>{{item.ogDescUS}}</td>
+                </tr>
+                <tr>
+                  <td>OG Image:</td>
+                  <td><img class="ext-thumb" :src="item.oglab"><br><a :href="item.oglab">{{item.oglab}}</a></td>
+                  <td><img class="ext-thumb" :src="item.ogImageUS"><br><a :href="item.ogImageUS">{{item.ogImageUS}}</a></td>
+                </tr>
+                <tr>
+                  <td>OG Image Current Server:</td>
+                  <td><img class="ext-thumb" :src="item.ogImage.url">
+                    <br>width:{{item.ogImage.size.width}}
+                    <br>height:{{item.ogImage.size.height}}
+                    <br><a :href="item.ogImage.url" :class="{'red':item.ogImage.url.indexOf('https')==-1}">{{item.ogImage.url}}</a></td>
+                  <td><img class="ext-thumb" :src="item.ogImageUScur">
+                    <br><a :href="item.ogImageUScur">{{item.ogImageUScur}}</a></td>
+                </tr>
+                <tr>
+                  <td>WeChat Image:</td>
+                  <td><img class="ext-thumb" :src="item.wechat.url">
+                    <br>width:{{item.wechat.size.width}}
+                    <br>height:{{item.wechat.size.height}}
+                    <a :href="item.wechat.url">{{item.wechat.url}}</a></td>
+                  <td>N/A</td>
+                </tr>
+              </tbody>
             </table>
         </div>
     </div>
@@ -97,7 +99,6 @@
               tableData:[],
               table:false,
               urls:'',
-              http:''
             }
         },
         methods:{

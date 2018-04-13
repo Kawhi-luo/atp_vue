@@ -1,3 +1,8 @@
+<style type="text/css">
+    .red{
+        color: red
+    }
+</style>
 <template id="path">
 	<div>
 		<h2 class="page-header">V-Path Checker</h2>
@@ -6,22 +11,33 @@
                 <p>URL Import(.txt only)</p>
                 <input class="form-control" type="file" id="fileInput">
                 <span class="input-group-btn">
-                    <input @click="btnImport" type="button" class="btn btn-primary" value="Import" id="btnImport"/>
+                    <input @click="btnImport" type="button" class="btn btn-primary" value="Import" >
                 </span>
             </div>
             <div class="col-md-4">
                 <p>URL Input (eg:https://webedit.apple.com/cn/apple-watch-series-3/)</p>
-                <textarea rows="5" id="urls" class="form-control" v-model="urls"></textarea>
-                <button @click="btnQuest" id="btnQuest" class="btn btn-primary">Query</button>
-                <button @click="btnClear" id="btnClear" class="btn btn-primary">Clear</button>
-                <button @click="btnExport" id="btnExport" class="btn btn-primary">Export</button>
+                <textarea rows="5" class="form-control" v-model="urls"></textarea>
+                <button @click="btnQuest" class="btn btn-primary">Query</button>
+                <button @click="btnClear" class="btn btn-primary">Clear</button>
+                <button @click="btnExport" class="btn btn-primary">Export</button>
             </div>
         </div>
         <br>
         <div>
-            <table class="table table-striped table-bordered">
-                <thead></thead>
-                <tbody id="resContainer" v-model="resContainer"></tbody>
+            <table class="table table-striped table-bordered" v-if="table" v-for="(item,key) in tableData">
+                <tbody>
+                    <tr>
+                        <th>Geo-Vpath</th>
+                        <th>US-Vpath</th>
+                    </tr>
+                    <tr>
+                        <td colspan="2"><a :href="key">{{key}}</a></td>
+                    </tr>
+                    <tr v-for="idx in item">
+                        <td :class="{'red':idx.flag==false}">{{idx.origin}}</td>
+                        <td :class="{'red':idx.flag==false}">{{idx.us}}</td>
+                    </tr>
+                </tbody>
             </table>
         </div>
     </div>
@@ -29,29 +45,12 @@
 <script type="text/javascript">
     var qs = require('qs');
     import  bus from '../assets/eventBus';
-    import axios from 'axios';
-    function html_encode(str1) {
-        let s = "";
-        if (str1) {
-            if (str1.length === 0) return "";
-            s = str1
-                .replace(/&/g, "&gt;")
-                .replace(/</g, "&lt;")
-                .replace(/>/g, "&gt;")
-                .replace(/ /g, "&nbsp;")
-                .replace(/\'/g, "&#39;")
-                .replace(/\"/g, "&quot;")
-                .replace(/\n/g, "<br>")
-                .replace(/ /g, "")
-                .replace(/\t/g, "");
-        }
-        return s;
-    }
     export default{
         data(){
             return{
-                urls:'',
-                resContainer:''
+              tableData:{},
+              table:true,
+              urls:'',
             }
         },
         methods:{
@@ -65,47 +64,38 @@
                 };
             },
             btnClear(){
-                this.urls='';
+                this.urls=""
             },
             btnQuest(){
-                var storedData;
-                let vm = this;
-                if(vm.urls.length > 5){
-                    document.getElementById('resContainer').innerHTML=``;
-                    bus.$emit("show",true);
-                    var urls_trim = vm.urls.replace(/(^\s*)|(\s*$)/g, "");
-                    //vm.$http.post('/api/vpath/url',{urls:urls_trim})
+                let urls_trim = this.urls.replace(/(^\s*)|(\s*$)/g, "");
+                let arr = urls_trim.split('\n');
+                let flag = false;
+                for(let i in arr){
+                    if(arr[i].indexOf("/hk/")==-1 &&arr[i].indexOf("/hk/en/")==-1&&arr[i].indexOf("/cn/")==-1&&arr[i].indexOf("/tw/")==-1&&
+                        arr[i].indexOf("/mo/")==-1){
+                        alert("Sorry,The URL "+arr[i] +" is US page,please input GC URL!");
+                        flag=true;
+                    }
+                }
+                if(!flag){
+                    let vm = this;
                     axios.post('/api/vpath/url',qs.stringify({ 'urls': urls_trim }))
                     .then(function(data){
-                        bus.$emit("show",false);
-                        if (data.data) {
-                            let str1 = ``;
-                            let str = ``;
-                            storedData = data.data.data;
-                            console.log(storedData);
-                            str += `<tr><th>Geo-Vpath</th><th>US-Vpath</th></tr>`;
-                            for(var n in storedData){
-                                str += `<tr><td colspan="2"><a href="${n}" target="_blank">${n}</td></tr>`;
-                                for(var i in storedData[n]){
-                                    console.log(html_encode(storedData[n][i].origin));
-                                    str+=`<tr><td ${storedData[n][i].flag==true ? "" : "class='red'"}>${html_encode(storedData[n][i].origin)}</td><td ${storedData[n][i].flag==true ? "" : "class='red'"}>${html_encode(storedData[n][i].us)}</td></tr>`;
-                                }
-                                document.getElementById('resContainer').innerHTML=str;
-
-                            }
-                        }    
+                        console.log(data);
+                        vm.table = true;
+                        vm.tableData = data.data.data;
                     })
                     .catch(function(err){
-                        alert('qFalse');
+                        console.log('axios false');
                     })
-                } else {
-                    console.log("null");
                 }
+                
             },
             btnExport(){
-                if(this.urls.length > 0){
-                    console.log(storedData);
-                    vm.$http.post(`/api/export`,{
+                alert('btnExport');
+                let urls = document.getElementById('urls');
+                if(urls.value.length > 0){
+                    axios.post(`/api/export`,{
                         data:JSON.stringify(storedData),
                         title:'vpath Report',
                         file:'vpath'

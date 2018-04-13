@@ -18,26 +18,28 @@
             </div>
         </div>
         <div>
-            <table border="1" cellspacing="0" v-if="table">
-              <tr>
-                <td>Sort</td>
-                <td>FootNote</td>
-                <td>Copy</td>
-              </tr>
-              <tr>
-                <td v-model="http" colspan="3">{{http}}</td>
-              </tr>
-              <tr v-for="item in tableData">
-                <td>{{item.mark}}</td>
-                <td>{{item.footnote}}</td>
-                <td>{{item.copy}}</td>
-              </tr>
-              <tr v-model="unsorted">
-                <td v-bind:rowspan="unsortedLength">Un-sorted</td>
-              </tr>
-              <tr v-for="item in unsorted">
-                <td colspan="2" >{{item}}</td>
-              </tr>
+            <table class="table table-striped table-bordered" v-if="table" v-for="item in tableData">
+                <tbody>
+                    <tr>
+                        <td>Sort</td>
+                        <td>FootNote</td>
+                        <td>Copy</td>
+                    </tr>
+                    <tr>
+                        <td colspan="3">{{tableData.url}}</td>
+                    </tr>
+                    <tr v-for="idx in item.data.data">
+                        <td>{{idx.mark}}</td>
+                        <td>{{idx.footnote}}</td>
+                        <td>{{idx.copy}}</td>
+                    </tr>
+                    <tr>
+                        <td :rowspan="item.data.irrelevance.length+1">Un-sorted</td>
+                    </tr>
+                    <tr v-for="idx in item.data.irrelevance">
+                        <td colspan="2" >{{idx}}</td>
+                    </tr>
+                </tbody>
             </table>
         </div>
     </div>
@@ -51,10 +53,7 @@
             return{
                 table:false,
                 tableData:[],
-                urls:'',
-                http:'',
-                unsorted:[],
-                unsortedLength:''
+                urls:''
             }
         },
         methods:{
@@ -80,10 +79,7 @@
                     .then(function(data){
                         console.log(data);
                         vm.table = true;
-                        vm.tableData = data.data[0].data.data;
-                        vm.http = data.data[0].url;
-                        vm.unsorted = data.data[0].data.irrelevance;
-                        vm.unsortedLength = data.data[0].data.irrelevance.length+1;
+                        vm.tableData = data.data;
                     })
                     .catch(function(err){
                         console.log('axios false');
