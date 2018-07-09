@@ -1,12 +1,13 @@
 <template>
   <div class="hello">
     <ul>
-      <li @click="select('all')">all</li>
-      <li @click="select('unactive')">未激活</li>
-      <li @click="select('doing')">进行中</li>
+      <li v-for="item in li" @click="active = item">{{item}}</li>
+    </ul>
+    <ul>
+      <li v-for="item in ll" @click="activq = item">{{item}}</li>
     </ul>
     <table>
-      <tr v-for="item in items" v-show="currentType !== item.action">
+      <tr v-for="item in items" v-if="active == item.action && activq == item.id || active == 'all'">
         <td>{{item.id}}</td>
         <td>{{item.action}}</td>
       </tr>
@@ -16,12 +17,15 @@
 
 <script>
 export default {
-  data () {
+  data() {
     return {
-      currentType:'all',
+      active: 'all',
+      activq: true,
+      li: ['all', '未激活', '进行中'],
+      ll: ['all', 'A234', 'B638'],
       items:[
         {
-          id:'A2345',
+          id:'A234',
           action:'未激活'
         },
         {
@@ -29,22 +33,17 @@ export default {
           action:'进行中'
         },
         {
+          id:'B638',
+          action:'未激活'
+        },
+        {
           id:'C863',
           action:'已禁用'
-        }
-      ]
+        }]
     }
   },
-  methods:{
-    select(type){
-      if (type === 'all') {
-        this.currentType = '全部'
-      }else if (type === 'unactive') {
-        this.currentType = '未激活'
-      }else if (type === 'doing') {
-        this.currentType = '进行中'
-      }
-    }
+  mounted() {
+    console.log(this.li);
   }
 }
 </script>
